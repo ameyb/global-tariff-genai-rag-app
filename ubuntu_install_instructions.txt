@@ -1,0 +1,48 @@
+# install Mesa OpenGL library in ubuntu
+# sudo apt-get install libgl1-mesa-glx
+# sudo apt install poppler-utils
+# sudo apt install tesseract-ocr
+# sudo apt-get install libpq-dev
+
+# install pyenv
+# sudo apt install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+# curl https://pyenv.run | bash
+# echo -e 'export PYENV_ROOT="$HOME/.pyenv"\nexport PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+# echo -e 'eval "$(pyenv init --path)"\neval "$(pyenv init -)"' >> ~/.bashrc
+# exec "$SHELL"
+
+
+# generate pyenv environment
+# pyenv install 3.10.12
+# pyenv virtualenv 3.10.12 chatbot-pyenv-3.10.12
+# pyenv activate chatbot-pyenv-3.10.12
+# pip install --upgrade pip setuptools wheel
+
+# %pip install langchain langchain-community python_dotenv
+# %pip install langchain-openai
+
+# GCP Vertex AI
+# pip install langchain-google-vertexai
+
+# %pip install pandas numpy
+# %pip install streamlit
+
+# %pip install "unstructured[all-docs]<=0.16.10"
+# %pip install langchain_postgres
+# pip install psycopg2-binary
+# pip3 install yb-cassandra-driver
+
+# pip uninstall pdfminer.six
+# pip install pdfminer.six==20221105
+# pip install ipython
+
+# run the app
+# export OPENAI_API_KEY=
+# export PGDATABASE=yugabyte 
+# streamlit run RAG_with_streamlit.py 
+
+
+# yugabytedb start
+# ./bin/yugabyted start --base_dir /tmp/node1 --enable_pg_parity_early_access \
+# --master_flags="ysql_yb_enable_advisory_locks=true,allowed_preview_flags_csv={ysql_yb_enable_advisory_locks}" \
+# --tserver_flags="ysql_yb_enable_advisory_locks=true,allowed_preview_flags_csv={ysql_yb_enable_advisory_locks}"
