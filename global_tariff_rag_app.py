@@ -41,7 +41,7 @@ logging.basicConfig(level=logging.INFO)
 # client = redis.Redis(host="localhost", port=6379, db=0)
 
 # Initialize YCQL client
-cluster = Cluster(['10.150.2.56'])
+cluster = Cluster(['10.150.0.130'])
 session = cluster.connect()
 
 # Create the keyspace.
@@ -76,7 +76,7 @@ def load_pdf_data(file_path):
         filename=file_path,
       
         infer_table_structure=True,
-        strategy = "hi_res",
+        strategy = "fast",
         
         extract_image_block_types = ["Image"],
         extract_image_block_to_payload  = True,
