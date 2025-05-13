@@ -13,6 +13,8 @@ attrs==25.3.0
 backoff==2.2.1
 beautifulsoup4==4.13.4
 blinker==1.9.0
+boto3==1.38.14
+botocore==1.38.14
 Bottleneck==1.4.2
 cachetools==5.5.2
 certifi==2025.1.31
@@ -76,6 +78,7 @@ ipython==8.35.0
 jedi==0.19.2
 Jinja2==3.1.6
 jiter==0.9.0
+jmespath==1.0.1
 joblib==1.4.2
 jsonpatch==1.33
 jsonpointer==3.0.0
@@ -186,6 +189,7 @@ requests==2.32.3
 requests-toolbelt==1.0.0
 rpds-py==0.24.0
 rsa==4.9.1
+s3transfer==0.12.0
 safetensors==0.5.3
 scipy==1.15.2
 shapely==2.1.0

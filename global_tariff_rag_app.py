@@ -1,6 +1,7 @@
 #Import Library
 from unstructured.partition.pdf import partition_pdf
-from langchain_openai import ChatOpenAI
+# from langchain_openai import ChatOpenAI
+from langchain_aws import ChatBedrockConverse
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -10,11 +11,11 @@ from langchain_core.tracers.stdout import ConsoleCallbackHandler
 
 from langchain_postgres.vectorstores import PGVector
 from database import COLLECTION_NAME, CONNECTION_STRING
-# from langchain_community.storage import RedisStore
 from cassandra.cluster import Cluster
 from langchain_community.storage import CassandraByteStore
 from langchain.schema.document import Document
-from langchain_openai import OpenAIEmbeddings
+# from langchain_openai import OpenAIEmbeddings
+from langchain_aws import BedrockEmbeddings
 from langchain.retrievers.multi_vector import MultiVectorRetriever
 from pathlib import Path
 from IPython.display import display, HTML
@@ -26,6 +27,7 @@ from streamlit_extras.stateful_chat import chat as fancy_chat
 import os, hashlib, shutil, uuid, json, time
 import torch, streamlit as st
 import logging
+import boto3
 
 
 from dotenv import load_dotenv
@@ -37,8 +39,11 @@ torch.classes.__path__ = [os.path.join(torch.__path__[0], torch.classes.__file__
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-# Initialize Redis client
-# client = redis.Redis(host="localhost", port=6379, db=0)
+# Initialize boto3 client
+bedrock_client = boto3.client(
+    service_name="bedrock-runtime",
+    region_name="us-east-1"  # Change to your AWS region
+)
 
 # Initialize YCQL client
 cluster = Cluster(['10.150.0.130'])
@@ -106,7 +111,10 @@ def summarize_text_and_tables(text, tables):
                     You are to give a concise summary of the table or text and do nothing else. 
                     Table or text chunk: {element} """
     prompt = ChatPromptTemplate.from_template(prompt_text)
-    model = ChatOpenAI(temperature=0.6, model="gpt-4o-mini", callbacks=[ConsoleCallbackHandler()])
+    # model = ChatOpenAI(temperature=0.6, model="gpt-4o-mini", callbacks=[ConsoleCallbackHandler()])
+    model = ChatBedrockConverse(temperature=0.6, 
+                                model="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+                                callbacks=[ConsoleCallbackHandler()])
     summarize_chain = {"element": RunnablePassthrough()}| prompt | model | StrOutputParser()
     logging.info(f"{model} done with summarization")
     return {
@@ -126,7 +134,9 @@ def initialize_retriever():
                 )
     id_key = "doc_id"
     vectorstore = PGVector(
-            embeddings=OpenAIEmbeddings(),
+            embeddings=BedrockEmbeddings(
+                client=bedrock_client, 
+                model_id="amazon.titan-embed-text-v2:0"),
             collection_name=COLLECTION_NAME,
             connection=CONNECTION_STRING,
             use_jsonb=True,
@@ -213,6 +223,8 @@ def chat_with_llm(retriever, previous_context=None):
 
     prompt = ChatPromptTemplate.from_template(prompt_text)
     model = ChatOpenAI(temperature=0.6, model="gpt-4o-mini")
+    model = ChatBedrockConverse(temperature=0.6, 
+                                model="us.anthropic.claude-3-7-sonnet-20250219-v1:0")
  
     rag_chain = ({
                     "context": retriever | RunnableLambda(
