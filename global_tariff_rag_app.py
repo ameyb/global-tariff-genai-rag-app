@@ -10,8 +10,10 @@ from langchain.globals import set_debug
 from langchain_core.tracers.stdout import ConsoleCallbackHandler
 
 from langchain_postgres.vectorstores import PGVector
-from database import COLLECTION_NAME, CONNECTION_STRING, YCQL_USERNAME, YCQL_PASSWORD, YCQL_HOST
+from database import COLLECTION_NAME, CONNECTION_STRING, CONNECTION_STRING_SSL, YCQL_USERNAME, YCQL_PASSWORD, YCQL_HOST
 from cassandra.cluster import Cluster
+from ssl import PROTOCOL_TLSv1_2, CERT_REQUIRED
+from cassandra.auth import PlainTextAuthProvider
 from langchain_community.storage import CassandraByteStore
 from langchain.schema.document import Document
 # from langchain_openai import OpenAIEmbeddings
@@ -42,7 +44,7 @@ logging.basicConfig(level=logging.INFO)
 # Initialize boto3 client
 bedrock_client = boto3.client(
     service_name="bedrock-runtime",
-    region_name="us-east-1"  # Change to your AWS region
+    region_name="us-east-2"  # Change to your AWS region
 )
 
 # Initialize YCQL client
@@ -130,8 +132,10 @@ def summarize_text_and_tables(text, tables):
                     Table or text chunk: {element} """
     prompt = ChatPromptTemplate.from_template(prompt_text)
     # model = ChatOpenAI(temperature=0.6, model="gpt-4o-mini", callbacks=[ConsoleCallbackHandler()])
-    model = ChatBedrockConverse(temperature=0.6, 
-                                model="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    model = ChatBedrockConverse(
+                                client=bedrock_client,
+                                temperature=0.6, 
+                                model="us.amazon.nova-lite-v1:0",
                                 callbacks=[ConsoleCallbackHandler()])
     summarize_chain = {"element": RunnablePassthrough()}| prompt | model | StrOutputParser()
     logging.info(f"{model} done with summarization")
@@ -151,13 +155,15 @@ def initialize_retriever():
                     keyspace="langchain",
                 )
     id_key = "doc_id"
+    print(CONNECTION_STRING_SSL)
     vectorstore = PGVector(
             embeddings=BedrockEmbeddings(
                 client=bedrock_client, 
                 model_id="amazon.titan-embed-text-v2:0"),
             collection_name=COLLECTION_NAME,
-            connection=CONNECTION_STRING,
+            connection=CONNECTION_STRING_SSL,
             use_jsonb=True,
+            create_extension=False
             )
     retrieval_loader = MultiVectorRetriever(vectorstore=vectorstore, docstore=store, id_key="doc_id")
     return retrieval_loader
@@ -240,9 +246,10 @@ def chat_with_llm(retriever, previous_context=None):
         return new_context
 
     prompt = ChatPromptTemplate.from_template(prompt_text)
-    model = ChatOpenAI(temperature=0.6, model="gpt-4o-mini")
-    model = ChatBedrockConverse(temperature=0.6, 
-                                model="us.anthropic.claude-3-7-sonnet-20250219-v1:0")
+    # model = ChatOpenAI(temperature=0.6, model="gpt-4o-mini")
+    model = ChatBedrockConverse(client=bedrock_client,
+                                temperature=0.6, 
+                                model="us.amazon.nova-lite-v1:0")
  
     rag_chain = ({
                     "context": retriever | RunnableLambda(
