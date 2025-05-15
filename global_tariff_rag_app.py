@@ -10,7 +10,7 @@ from langchain.globals import set_debug
 from langchain_core.tracers.stdout import ConsoleCallbackHandler
 
 from langchain_postgres.vectorstores import PGVector
-from database import COLLECTION_NAME, CONNECTION_STRING, YCQL_USERNAME, YCQL_PASSWORD
+from database import COLLECTION_NAME, CONNECTION_STRING, YCQL_USERNAME, YCQL_PASSWORD, YCQL_HOST
 from cassandra.cluster import Cluster
 from langchain_community.storage import CassandraByteStore
 from langchain.schema.document import Document
