@@ -10,7 +10,7 @@ from langchain.globals import set_debug
 from langchain_core.tracers.stdout import ConsoleCallbackHandler
 
 from langchain_postgres.vectorstores import PGVector
-from database import COLLECTION_NAME, CONNECTION_STRING
+from database import COLLECTION_NAME, CONNECTION_STRING, YCQL_USERNAME, YCQL_PASSWORD
 from cassandra.cluster import Cluster
 from langchain_community.storage import CassandraByteStore
 from langchain.schema.document import Document
@@ -46,7 +46,25 @@ bedrock_client = boto3.client(
 )
 
 # Initialize YCQL client
-cluster = Cluster(['10.150.0.130'])
+ssl_options = {
+    'ca_certs': 'root.crt',           # CA certificate path
+    # 'certfile': '/path/to/client.crt',        # Optional: client certificate
+    # 'keyfile': '/path/to/client.key',         # Optional: client key
+    'ssl_version': PROTOCOL_TLSv1_2,          # TLS version
+    'cert_reqs': CERT_REQUIRED                # Certificate verification mode
+}
+
+auth_provider = PlainTextAuthProvider(
+    username=YCQL_USERNAME,
+    password=YCQL_PASSWORD
+)
+
+cluster = Cluster(
+                    contact_points=[YCQL_HOST],
+                    port=9042,                                # Default Cassandra port
+                    auth_provider=auth_provider,
+                    ssl_options=ssl_options
+                )
 session = cluster.connect()
 
 # Create the keyspace.
