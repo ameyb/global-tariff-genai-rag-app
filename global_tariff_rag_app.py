@@ -1,6 +1,5 @@
 #Import Library
 from unstructured.partition.pdf import partition_pdf
-# from langchain_openai import ChatOpenAI
 from langchain_aws import ChatBedrockConverse
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
@@ -16,7 +15,6 @@ from ssl import PROTOCOL_TLSv1_2, CERT_REQUIRED
 from cassandra.auth import PlainTextAuthProvider
 from langchain_community.storage import CassandraByteStore
 from langchain.schema.document import Document
-# from langchain_openai import OpenAIEmbeddings
 from langchain_aws import BedrockEmbeddings
 from langchain.retrievers.multi_vector import MultiVectorRetriever
 from pathlib import Path
@@ -50,8 +48,6 @@ bedrock_client = boto3.client(
 # Initialize YCQL client
 ssl_options = {
     'ca_certs': 'root.crt',           # CA certificate path
-    # 'certfile': '/path/to/client.crt',        # Optional: client certificate
-    # 'keyfile': '/path/to/client.key',         # Optional: client key
     'ssl_version': PROTOCOL_TLSv1_2,          # TLS version
     'cert_reqs': CERT_REQUIRED                # Certificate verification mode
 }
@@ -131,7 +127,6 @@ def summarize_text_and_tables(text, tables):
                     You are to give a concise summary of the table or text and do nothing else. 
                     Table or text chunk: {element} """
     prompt = ChatPromptTemplate.from_template(prompt_text)
-    # model = ChatOpenAI(temperature=0.6, model="gpt-4o-mini", callbacks=[ConsoleCallbackHandler()])
     model = ChatBedrockConverse(
                                 client=bedrock_client,
                                 temperature=0.6, 
@@ -235,10 +230,6 @@ def chat_with_llm(retriever, previous_context=None):
                     {question}
                 """
 
-
-
-
-
 # Combine previous context with the new context
     def combine_contexts(new_context, previous_context):
         if previous_context:
@@ -246,7 +237,6 @@ def chat_with_llm(retriever, previous_context=None):
         return new_context
 
     prompt = ChatPromptTemplate.from_template(prompt_text)
-    # model = ChatOpenAI(temperature=0.6, model="gpt-4o-mini")
     model = ChatBedrockConverse(client=bedrock_client,
                                 temperature=0.6, 
                                 model="us.amazon.nova-lite-v1:0")
@@ -355,7 +345,7 @@ def invoke_chat(file_upload, message, previous_context=None):
     log_data_to_ui(f"\n\nGenerate User Query embedding")
     rag_chain = chat_with_llm(retriever, previous_context)
     response = rag_chain.invoke(message)
-    log_data_to_ui(f"\n\nChat with LLM invoked")
+    log_data_to_ui(f"\n\nChat with us.amazon.nova-pro-v1 model invoked")
     response_placeholder = st.empty()
     response_placeholder.write(response)
     return response
@@ -425,22 +415,8 @@ def main():
     with chatBotCol:
 
         add_vertical_space(1)
-
-        # stylable_container(
-        #     key="chat_container",
-        #     css_styles="""
-        #         {
-        #             background-color: #f4f6f8;
-        #             padding: 20px;
-        #             border-radius: 12px;
-        #             box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
-        #         }
-        #     """,
-        # )
-
         # Fancy chat input
         user_prompt = st.chat_input("Ask a question about the uploaded document...")
-
 
         if user_prompt:
             st.session_state.messages.append({"role": "user", "content": user_prompt})
@@ -472,7 +448,6 @@ def main():
 
                     duration = time.time() - start_time
                     response_content = f"{response_message}"
-                    # st.markdown(response_content)
 
                     st.session_state.messages.append({"role": "assistant", "content": response_content})
 
